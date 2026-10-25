@@ -43,8 +43,6 @@
 
 import http.server
 import requests
-import threading
-from socketserver import ThreadingMixIn
 from urllib.parse import unquote, parse_qs
 import os
 
@@ -79,7 +77,7 @@ def CheckURI(uri, timeout=5):
     '''
     # 1. Write this function.  Delete the following line.
     try:
-        r = requests.get(uri, timeout = timeout)
+        r = requests.get(uri, timeout=timeout)
         return r.status_code == 200
     except requests.RequestException:
         return False
@@ -142,11 +140,10 @@ class Shortener(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write("Couldn't fetch URI'{}'. Sorry!".format(longuri).encode())
 
-class ThreadHTTPServer(ThreadingMixIn, http.server.HTTPServer):
-    "This is an HTTPServer that supports thread-based concurrency."
-
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8000))
+    # Heroku sets PORT; locally the default is 3100, the first port of soulcraft's dev block.
+    port = int(os.environ.get('PORT', 3100))
     server_address = ('', port)
-    httpd = ThreadHTTPServer(server_address, Shortener)
+    # ThreadingHTTPServer (Python 3.7+) handles each request in its own thread.
+    httpd = http.server.ThreadingHTTPServer(server_address, Shortener)
     httpd.serve_forever()
