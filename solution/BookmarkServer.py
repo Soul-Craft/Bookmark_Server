@@ -3,6 +3,7 @@
 # A *bookmark server* or URI shortener.
 
 import http.server
+import os
 import requests
 from urllib.parse import unquote, parse_qs
 
@@ -106,6 +107,6 @@ class Shortener(http.server.BaseHTTPRequestHandler):
                 "Couldn't fetch URI '{}'. Sorry!".format(longuri).encode())
 
 if __name__ == '__main__':
-    server_address = ('', 8000)
+    server_address = ('', int(os.environ.get('PORT', 3100)))
     httpd = http.server.HTTPServer(server_address, Shortener)
     httpd.serve_forever()

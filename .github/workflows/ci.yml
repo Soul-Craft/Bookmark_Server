@@ -1,0 +1,39 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m compileall -q .
+      # test.py talks to a running server on $PORT (default 3100) and checks a live URI (google.com).
+      - run: |
+          python Bookmark_Server.py &
+          for _ in $(seq 20); do nc -z localhost 3100 && break; sleep 0.5; done
+          python test.py
+
+  # Owner, 2026-10-25: every Dependabot update merges once all other jobs pass, majors too.
+  dependabot-merge:
+    needs: [test]
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    permissions: {contents: write, pull-requests: write}
+    steps:
+      - run: gh pr merge --squash --delete-branch "$PR"
+        env: {GH_TOKEN: "${{ github.token }}", PR: "${{ github.event.pull_request.html_url }}"}
