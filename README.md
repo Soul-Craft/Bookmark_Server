@@ -10,7 +10,7 @@ See `Bookmark_Server.py` for starter code and instructions.
 
 ## Running it
 
-Python 3.15 (`.python-version`):
+Python 3.15:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
